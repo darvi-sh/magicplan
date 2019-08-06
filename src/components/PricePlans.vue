@@ -7,7 +7,7 @@
 		<div class="subscriptionLengthToggle">
 			<v-btn-toggle
 				class="mt-2 inset-border-1"
-				v-model="subscrpition_length"
+				v-model="subscrpition_mode"
 				mandatory
 			>
 				<v-btn text small color="blue" class="text-capitalize" height="32" width="100">Monthly</v-btn>
@@ -34,9 +34,9 @@
 				</v-flex>
 			</v-layout>
 
-			<v-layout align-center>
+			<v-layout>
 				<v-flex class="pt-5" xs6>
-					<div class="display-1 grey--text text--darken-4">{{ StandardPrice }}</div>
+					<div class="display-1 grey--text text--darken-4">{{ prices.currency.symbol}}{{ StandardPricePerMonth }}</div>
 
 					<div class="mt-1 mb-3 grey--text text--darken-4">user per month</div>
 
@@ -48,6 +48,18 @@
 					>Subscribe</v-btn>
 
 					<v-divider class="ma-2" />
+
+					<div v-if="subscription.standard">
+						<div class="py-5">
+							&nbsp;<span v-if="subscrpition_mode === 1">{{prices.currency.symbol}}{{prices.standard.yearly}} / Year</span>
+						</div>
+
+						<div class="px-2 py-5 grey lighten-4">
+							<v-btn outlined block color="blue">PayPal</v-btn>
+							or
+							<v-btn outlined block color="blue">credit card</v-btn>
+						</div>
+					</div>
 
 					<ul class="list grey--text text--darken-4 text-center">
 						<li>Floor plan creation</li>
@@ -72,7 +84,7 @@
 				/>
 
 				<v-flex class="pt-5" xs6>
-					<div class="display-1 grey--text text--darken-4">{{ BusinessPrice }}</div>
+					<div class="display-1 grey--text text--darken-4">{{ prices.currency.symbol}}{{ BusinessPricePerMonth }}</div>
 
 					<div class="mt-1 mb-3 grey--text text--darken-4">device per month</div>
 
@@ -84,6 +96,26 @@
 					>Subscribe</v-btn>
 
 					<v-divider class="ma-2" />
+
+					<div v-if="subscription.business">
+						<div class="py-5">
+							<v-layout>
+								<v-flex>Devices:</v-flex>
+								<v-flex>
+									<v-btn :disabled="numberMultiplier <= 1" @click="changeMultiplier(-1)" small>-</v-btn>
+									{{numberMultiplier}}
+									<v-btn @click="changeMultiplier(1)" small>+</v-btn>
+								</v-flex>
+								<v-flex>{{prices.currency.symbol}}{{calculatedPrice}}</v-flex>
+							</v-layout>
+						</div>
+
+						<div class="px-2 py-5 grey lighten-4">
+							<v-btn outlined block color="blue">PayPal</v-btn>
+							or
+							<v-btn outlined block color="blue">credit card</v-btn>
+						</div>
+					</div>
 
 					<ul class="list grey--text text--darken-4 text-center">
 						<li>Floor plan creation</li>
@@ -112,18 +144,28 @@ import prices from "../config/prices.js";
 
 export default {
 	data: () => ({
+		subscription: {
+			standard: false,
+			business: false
+		},
 		prices: prices,
-		subscrpition_length: 1
+		subscrpition_mode: 1,
+		numberMultiplier: 1
 	}),
 	created: () => {},
 	computed: {
-		StandardPrice() { return `${prices.currency.symbol}${this.subscrpition_length === 0 ? prices.standard.monthly : (prices.standard.yearly / 12).toFixed(2)}` },
-		BusinessPrice() { return `${prices.currency.symbol}${this.subscrpition_length === 0 ? prices.business.monthly : (prices.business.yearly / 12).toFixed(2)}` }
+		StandardPricePerMonth() { return this.subscrpition_mode === 0 ? prices.standard.monthly : (prices.standard.yearly / 12).toFixed(2) },
+		BusinessPricePerMonth() { return this.subscrpition_mode === 0 ? prices.business.monthly : (prices.business.yearly / 12).toFixed(2) },
+		BusinessPrice() { return this.subscrpition_mode === 0 ? prices.business.monthly : prices.business.yearly },
+		calculatedPrice() { return (this.numberMultiplier * this.BusinessPrice).toFixed(2) }
 	},
 	methods: {
-		subscribe: subscrpition_length => {
-			console.log("clicked on subscribe ", subscrpition_length);
-		}
+		subscribe(subscrpition_name) {
+			this.subscription[subscrpition_name] = !this.subscription[subscrpition_name];
+		},
+		changeMultiplier(amount) {
+			this.numberMultiplier = this.numberMultiplier + amount;
+		},
 	}
 };
 </script>
